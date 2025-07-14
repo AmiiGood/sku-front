@@ -12,11 +12,10 @@ const ExtraLightLogo = () => (
     }}
   >
     <img
-      src="/images/extralight-logo.png"
+      src="/images/dbxextralight.png"
       alt="EXTRALIGHT"
       style={{
-        height: "32px",
-        width: "auto",
+        width: "80px",
         objectFit: "contain",
         filter: "var(--logo-filter, none)", // Para poder invertir en modo oscuro
       }}

@@ -2,141 +2,185 @@ import React, { useState } from "react";
 import { Printer, Plus, Minus, Eye, X } from "lucide-react";
 
 const LabelPreview = ({ articulo, cantidad }) => {
-  const currentDate = new Date().toLocaleDateString("es-ES");
-  const qrCode = `${currentDate}$${articulo.SKU}$${articulo.QuantityPerLU}`;
+  const now = new Date();
+  const fecha = now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const [year, month, day] = fecha.split("-");
+  const fechaFormateada = `${day}${month}${year.slice(2)}$${articulo.SKU}$${
+    articulo.QuantityPerLU
+  }`;
+  const numeroEtiqueta = 1; // Para preview, usamos 1
+  const codigoFinal = `${fechaFormateada}$${numeroEtiqueta
+    .toString()
+    .padStart(3, "0")}`;
+  const fechaFormateadaBonita = `${day}/${month}/${year}`;
+  const hora = now.toTimeString().split(" ")[0];
+  const fechaHora = `${fechaFormateadaBonita} ${hora}`;
 
   return (
     <div
       style={{
-        border: "2px dashed var(--gray-300)",
-        borderRadius: "var(--border-radius)",
-        padding: "1rem",
-        backgroundColor: "var(--gray-50)",
-        minHeight: "200px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
+        border: "2px solid var(--gray-400)",
+        borderRadius: "4px",
+        padding: "0",
+        backgroundColor: "var(--white)",
+        width: "400px",
+        height: "280px",
         position: "relative",
         fontFamily: "monospace",
-        fontSize: "0.75rem",
+        fontSize: "14px",
+        margin: "0 auto",
+        overflow: "hidden",
       }}
     >
-      {/* Header de la etiqueta */}
-      <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
-        <div
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: "bold",
-            color: "var(--black)",
-            marginBottom: "0.25rem",
-          }}
-        >
-          EXTRALIGHT
-        </div>
-        <div
-          style={{
-            fontSize: "0.625rem",
-            color: "var(--gray-600)",
-          }}
-        >
-          Sistema de Inventario
-        </div>
-      </div>
+      {/* Simulación exacta del layout ZPL */}
 
-      {/* Información principal */}
-      <div style={{ flex: 1 }}>
-        <div style={{ marginBottom: "0.5rem" }}>
-          <div style={{ fontWeight: "bold", color: "var(--black)" }}>
-            SKU: {articulo.SKU}
-          </div>
-          <div
-            style={{
-              color: "var(--gray-700)",
-              fontSize: "0.7rem",
-              marginTop: "0.25rem",
-              lineHeight: "1.2",
-            }}
-          >
-            {articulo.Descripcion}
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "0.5rem",
-            fontSize: "0.65rem",
-            color: "var(--gray-600)",
-          }}
-        >
-          <div>
-            <strong>Color:</strong> {articulo.ColorCode}
-          </div>
-          <div>
-            <strong>Talla:</strong> {articulo.Size}
-          </div>
-          <div>
-            <strong>Grupo:</strong> {articulo.GroupCode}
-          </div>
-          <div>
-            <strong>Cant/LU:</strong> {articulo.QuantityPerLU}
-          </div>
-        </div>
-      </div>
-
-      {/* Código QR simulado */}
+      {/* SKU - Posición ^FO50,50 */}
       <div
         style={{
-          textAlign: "center",
-          marginTop: "0.5rem",
-          paddingTop: "0.5rem",
-          borderTop: "1px solid var(--gray-200)",
+          position: "absolute",
+          left: "25px",
+          top: "25px",
+          fontSize: "16px",
+          fontWeight: "bold",
+          color: "var(--black)",
         }}
       >
-        <div
-          style={{
-            width: "60px",
-            height: "60px",
-            backgroundColor: "var(--black)",
-            margin: "0 auto 0.25rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "0.5rem",
-            color: "var(--white)",
-            fontWeight: "bold",
-          }}
-        >
-          QR
-        </div>
-        <div
-          style={{
-            fontSize: "0.5rem",
-            color: "var(--gray-500)",
-            wordBreak: "break-all",
-          }}
-        >
-          {qrCode}
-        </div>
-        <div
-          style={{
-            fontSize: "0.6rem",
-            color: "var(--gray-600)",
-            marginTop: "0.25rem",
-          }}
-        >
-          {currentDate}
+        SKU: {articulo.SKU}
+      </div>
+
+      {/* Descripción - Posición ^FO50,100 */}
+      <div
+        style={{
+          position: "absolute",
+          left: "25px",
+          top: "50px",
+          fontSize: "16px",
+          fontWeight: "bold",
+          color: "var(--black)",
+          maxWidth: "280px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        Descrip: {articulo.Descripcion}
+      </div>
+
+      {/* Color - Posición ^FO50,150 */}
+      <div
+        style={{
+          position: "absolute",
+          left: "25px",
+          top: "75px",
+          fontSize: "16px",
+          fontWeight: "bold",
+          color: "var(--black)",
+        }}
+      >
+        Color: {articulo.ColorCode}
+      </div>
+
+      {/* Size - Posición ^FO50,200 */}
+      <div
+        style={{
+          position: "absolute",
+          left: "25px",
+          top: "100px",
+          fontSize: "16px",
+          fontWeight: "bold",
+          color: "var(--black)",
+        }}
+      >
+        Size: {articulo.Size}
+      </div>
+
+      {/* Qty - Posición ^FO50,250 */}
+      <div
+        style={{
+          position: "absolute",
+          left: "25px",
+          top: "125px",
+          fontSize: "16px",
+          fontWeight: "bold",
+          color: "var(--black)",
+        }}
+      >
+        Qty: {articulo.QuantityPerLU}
+      </div>
+
+      {/* Fecha y hora - Posición ^FO50,300 */}
+      <div
+        style={{
+          position: "absolute",
+          left: "25px",
+          top: "150px",
+          fontSize: "12px",
+          color: "var(--black)",
+        }}
+      >
+        {fechaHora}
+      </div>
+
+      {/* Código QR - Posición ^FO350,120 */}
+      <div
+        style={{
+          position: "absolute",
+          right: "30px",
+          top: "60px",
+          width: "80px",
+          height: "80px",
+          backgroundColor: "var(--black)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "12px",
+          color: "var(--white)",
+          fontWeight: "bold",
+          border: "2px solid var(--black)",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div>QR</div>
+          <div style={{ fontSize: "8px" }}>CODE</div>
         </div>
       </div>
+
+      {/* Código debajo del QR - Posición ^FO280,300 */}
+      <div
+        style={{
+          position: "absolute",
+          right: "30px",
+          top: "150px",
+          fontSize: "10px",
+          color: "var(--black)",
+          textAlign: "center",
+          width: "80px",
+          wordBreak: "break-all",
+          lineHeight: "1.1",
+        }}
+      >
+        {codigoFinal}
+      </div>
+
+      {/* Línea separadora inferior - Posición ^FO50,370 */}
+      <div
+        style={{
+          position: "absolute",
+          left: "25px",
+          bottom: "40px",
+          width: "350px",
+          height: "3px",
+          backgroundColor: "var(--black)",
+        }}
+      />
 
       {/* Indicador de cantidad */}
       {cantidad > 1 && (
         <div
           style={{
             position: "absolute",
-            top: "0.5rem",
-            right: "0.5rem",
+            top: "8px",
+            right: "8px",
             backgroundColor: "var(--primary-600)",
             color: "var(--white)",
             borderRadius: "50%",
@@ -145,13 +189,31 @@ const LabelPreview = ({ articulo, cantidad }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "0.75rem",
+            fontSize: "12px",
             fontWeight: "bold",
+            zIndex: 10,
           }}
         >
           {cantidad}
         </div>
       )}
+
+      {/* Marca de agua "PREVIEW" */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%) rotate(-45deg)",
+          fontSize: "24px",
+          color: "rgba(0, 0, 0, 0.1)",
+          fontWeight: "bold",
+          zIndex: 5,
+          pointerEvents: "none",
+        }}
+      >
+        PREVIEW
+      </div>
     </div>
   );
 };
@@ -192,7 +254,7 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
     <div className="modal" onClick={onClose}>
       <div
         className="modal-content"
-        style={{ maxWidth: "600px", width: "95%" }}
+        style={{ maxWidth: "700px", width: "95%" }}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyPress}
         tabIndex="0"
@@ -367,7 +429,7 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
             >
               <Eye size={16} />
               <label className="form-label" style={{ margin: 0 }}>
-                Vista previa de la etiqueta
+                Vista previa de la etiqueta (Zebra ZPL)
               </label>
             </div>
             <LabelPreview articulo={articulo} cantidad={cantidad} />
@@ -385,8 +447,8 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
               textAlign: "center",
             }}
           >
-            💡 Las etiquetas incluyen código QR para trazabilidad y fecha de
-            generación
+            💡 Preview basado en el formato ZPL real de la impresora Zebra •
+            Incluye código QR único con trazabilidad completa
           </div>
         </div>
 

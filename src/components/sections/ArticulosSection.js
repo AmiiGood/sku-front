@@ -6,7 +6,6 @@ import Modal from "../common/Modal";
 import Pagination from "../common/Pagination";
 import SearchInput from "../common/SearchInput";
 import PrintLabelsModal from "../common/PrintLabelsModal";
-import ThemeSelector from "../common/ThemeSelector";
 
 const ArticulosSection = () => {
   const { request } = useApi();
@@ -16,6 +15,8 @@ const ArticulosSection = () => {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [articuloToPrint, setArticuloToPrint] = useState(null);
@@ -30,7 +31,7 @@ const ArticulosSection = () => {
     ColorCode: "",
     Size: "",
     UPCCode: "",
-    QuantityPerLU: 0,
+    QuantityPerLU: "0", // Changed from 0 to "0"
   });
 
   const loadArticulos = async (page = 1, searchTerm = "") => {
@@ -38,15 +39,21 @@ const ArticulosSection = () => {
       setLoading(true);
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "10",
+        limit: "10", // Usar valor fijo inicialmente
         ...(searchTerm && { search: searchTerm }),
       });
 
       const response = await request(`/api/articulos?${params}`);
       setArticulos(response.data);
       setTotalPages(response.pagination.totalPages);
+      setTotalItems(response.pagination.totalItems);
+      setItemsPerPage(response.pagination.itemsPerPage);
     } catch (error) {
       console.error("Error loading articulos:", error);
+      // Establecer valores por defecto en caso de error
+      setArticulos([]);
+      setTotalPages(1);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -84,7 +91,7 @@ const ArticulosSection = () => {
         ColorCode: "",
         Size: "",
         UPCCode: "",
-        QuantityPerLU: 0,
+        QuantityPerLU: "0", // Changed from 0 to "0"
       });
       loadArticulos(currentPage, search);
     } catch (error) {
@@ -98,7 +105,19 @@ const ArticulosSection = () => {
 
   const handleEdit = (articulo) => {
     setEditingArticulo(articulo);
-    setFormData(articulo);
+    // Only include editable fields, exclude ID and other non-editable fields
+    setFormData({
+      SKU: articulo.SKU,
+      Descripcion: articulo.Descripcion,
+      UnitCode: articulo.UnitCode,
+      GroupCode: articulo.GroupCode,
+      FamilyCode: articulo.FamilyCode,
+      KindCode: articulo.KindCode,
+      ColorCode: articulo.ColorCode,
+      Size: articulo.Size,
+      UPCCode: articulo.UPCCode,
+      QuantityPerLU: articulo.QuantityPerLU.toString(),
+    });
     setShowModal(true);
   };
 
@@ -161,12 +180,27 @@ const ArticulosSection = () => {
         <div className="header-actions">
           <button
             className="btn btn-primary"
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              // Reset form data when opening new article modal
+              setFormData({
+                SKU: "",
+                Descripcion: "",
+                UnitCode: "",
+                GroupCode: "",
+                FamilyCode: "",
+                KindCode: "",
+                ColorCode: "",
+                Size: "",
+                UPCCode: "",
+                QuantityPerLU: "0",
+              });
+              setEditingArticulo(null);
+              setShowModal(true);
+            }}
           >
             <Plus size={16} />
             Nuevo Artículo
           </button>
-          <ThemeSelector />
         </div>
       </div>
 
@@ -198,56 +232,68 @@ const ArticulosSection = () => {
                 </tr>
               </thead>
               <tbody>
-                {articulos.map((articulo) => (
-                  <tr key={articulo.ID}>
-                    <td>{articulo.ID}</td>
-                    <td>{articulo.SKU}</td>
-                    <td>{articulo.Descripcion}</td>
-                    <td>{articulo.UnitCode}</td>
-                    <td>{articulo.GroupCode}</td>
-                    <td>{articulo.ColorCode}</td>
-                    <td>{articulo.Size}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          articulo.Eliminado ? "badge-danger" : "badge-success"
-                        }`}
-                      >
-                        {articulo.Eliminado ? "Eliminado" : "Activo"}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => handleEdit(articulo)}
-                          title="Editar artículo"
-                        >
-                          <Edit size={14} />
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => handlePrintLabels(articulo)}
-                          title="Imprimir etiquetas"
-                          style={{
-                            backgroundColor: "var(--success-50)",
-                            borderColor: "var(--success-600)",
-                            color: "var(--success-600)",
-                          }}
-                        >
-                          <Printer size={14} />
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => handleDelete(articulo.ID)}
-                          title="Eliminar artículo"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                {articulos.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="9"
+                      style={{
+                        textAlign: "center",
+                        padding: "2rem",
+                        color: "var(--gray-500)",
+                      }}
+                    >
+                      {search
+                        ? `No se encontraron artículos que coincidan con "${search}"`
+                        : "No hay artículos registrados"}
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  articulos.map((articulo) => (
+                    <tr key={articulo.ID}>
+                      <td>{articulo.ID}</td>
+                      <td>{articulo.SKU}</td>
+                      <td>{articulo.Descripcion}</td>
+                      <td>{articulo.UnitCode}</td>
+                      <td>{articulo.GroupCode}</td>
+                      <td>{articulo.ColorCode}</td>
+                      <td>{articulo.Size}</td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            articulo.Eliminado
+                              ? "badge-danger"
+                              : "badge-success"
+                          }`}
+                        >
+                          {articulo.Eliminado ? "Eliminado" : "Activo"}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => handleEdit(articulo)}
+                            title="Editar artículo"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => handlePrintLabels(articulo)}
+                            title="Imprimir etiquetas"
+                            style={{
+                              backgroundColor: "var(--success-50)",
+                              borderColor: "var(--success-600)",
+                              color: "var(--success-600)",
+                            }}
+                          >
+                            <Printer size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -257,6 +303,8 @@ const ArticulosSection = () => {
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
         />
       </div>
 
@@ -265,6 +313,19 @@ const ArticulosSection = () => {
         onClose={() => {
           setShowModal(false);
           setEditingArticulo(null);
+          // Reset form data when closing modal
+          setFormData({
+            SKU: "",
+            Descripcion: "",
+            UnitCode: "",
+            GroupCode: "",
+            FamilyCode: "",
+            KindCode: "",
+            ColorCode: "",
+            Size: "",
+            UPCCode: "",
+            QuantityPerLU: "0",
+          });
         }}
         title={editingArticulo ? "Editar Artículo" : "Nuevo Artículo"}
       >
@@ -395,7 +456,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  QuantityPerLU: parseInt(e.target.value),
+                  QuantityPerLU: e.target.value, // Keep as string, don't parse to int
                 })
               }
               required

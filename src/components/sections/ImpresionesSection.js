@@ -14,6 +14,8 @@ const ImpresionesSection = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
   const [filtros, setFiltros] = useState({
     fecha_inicio: "",
     fecha_fin: "",
@@ -21,12 +23,16 @@ const ImpresionesSection = () => {
     usuario_id: "",
   });
 
-  const loadImpresiones = async (page = 1) => {
+  const loadImpresiones = async (page = 1, perPage = itemsPerPage) => {
     try {
       setLoading(true);
+
+      // Use the perPage parameter with fallback to 15 if still undefined
+      const limit = perPage || 15;
+
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "15",
+        limit: limit.toString(),
         ...Object.fromEntries(
           Object.entries(filtros).filter(([key, value]) => value !== "")
         ),
@@ -35,9 +41,15 @@ const ImpresionesSection = () => {
       const response = await request(`/api/impresiones?${params}`);
       setImpresiones(response.data);
       setTotalPages(response.pagination.totalPages);
+      setTotalItems(response.pagination.totalItems);
+      setItemsPerPage(response.pagination.itemsPerPage);
     } catch (error) {
       console.error("Error loading impresiones:", error);
       toast.error("Error al cargar el historial de impresiones", 5000);
+      // Establecer valores por defecto en caso de error
+      setImpresiones([]);
+      setTotalPages(1);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -55,13 +67,14 @@ const ImpresionesSection = () => {
       setEstadisticas(response.data);
     } catch (error) {
       console.error("Error loading estadísticas:", error);
+      setEstadisticas([]);
     }
   };
 
   useEffect(() => {
-    loadImpresiones(currentPage);
+    loadImpresiones(currentPage, itemsPerPage);
     loadEstadisticas();
-  }, [currentPage, filtros]);
+  }, [currentPage, filtros, itemsPerPage]);
 
   const handleFiltroChange = (campo, valor) => {
     setFiltros((prev) => ({
@@ -113,7 +126,7 @@ const ImpresionesSection = () => {
       <div className="header">
         <h1>Historial de Impresiones</h1>
         <div className="header-actions">
-          <ThemeSelector />
+          {/* Aquí podrías agregar controles adicionales si los necesitas */}
         </div>
       </div>
 
@@ -368,6 +381,8 @@ const ImpresionesSection = () => {
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
         />
       </div>
     </div>
