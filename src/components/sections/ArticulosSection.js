@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Printer } from "lucide-react";
+import { Plus, Edit, Trash2, Printer, Eye } from "lucide-react";
 import { useApi } from "../../hooks/useApi";
 import { useToastContext } from "../../contexts/ToastContext";
+import { useRole } from "../../contexts/RoleContext";
 import Modal from "../common/Modal";
 import Pagination from "../common/Pagination";
 import SearchInput from "../common/SearchInput";
@@ -10,6 +11,8 @@ import PrintLabelsModal from "../common/PrintLabelsModal";
 const ArticulosSection = () => {
   const { request } = useApi();
   const toast = useToastContext();
+  const { hasPermission, isOperador, isGenerador } = useRole();
+
   const [articulos, setArticulos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -21,6 +24,7 @@ const ArticulosSection = () => {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [articuloToPrint, setArticuloToPrint] = useState(null);
   const [editingArticulo, setEditingArticulo] = useState(null);
+  const [viewingArticulo, setViewingArticulo] = useState(null);
   const [formData, setFormData] = useState({
     SKU: "",
     Descripcion: "",
@@ -31,7 +35,7 @@ const ArticulosSection = () => {
     ColorCode: "",
     Size: "",
     UPCCode: "",
-    QuantityPerLU: "0", // Changed from 0 to "0"
+    QuantityPerLU: "0",
   });
 
   const loadArticulos = async (page = 1, searchTerm = "") => {
@@ -39,7 +43,7 @@ const ArticulosSection = () => {
       setLoading(true);
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "10", // Usar valor fijo inicialmente
+        limit: "10",
         ...(searchTerm && { search: searchTerm }),
       });
 
@@ -50,7 +54,6 @@ const ArticulosSection = () => {
       setItemsPerPage(response.pagination.itemsPerPage);
     } catch (error) {
       console.error("Error loading articulos:", error);
-      // Establecer valores por defecto en caso de error
       setArticulos([]);
       setTotalPages(1);
       setTotalItems(0);
@@ -66,12 +69,22 @@ const ArticulosSection = () => {
   const handleSubmit = async () => {
     try {
       if (editingArticulo) {
+        if (!hasPermission("articulos", "update")) {
+          toast.error("No tienes permisos para actualizar artículos", 3000);
+          return;
+        }
+
         await request(`/api/articulos/${editingArticulo.ID}`, {
           method: "PUT",
           body: JSON.stringify(formData),
         });
         toast.success("Artículo actualizado exitosamente", 3000);
       } else {
+        if (!hasPermission("articulos", "create")) {
+          toast.error("No tienes permisos para crear artículos", 3000);
+          return;
+        }
+
         await request("/api/articulos", {
           method: "POST",
           body: JSON.stringify(formData),
@@ -91,7 +104,7 @@ const ArticulosSection = () => {
         ColorCode: "",
         Size: "",
         UPCCode: "",
-        QuantityPerLU: "0", // Changed from 0 to "0"
+        QuantityPerLU: "0",
       });
       loadArticulos(currentPage, search);
     } catch (error) {
@@ -104,8 +117,29 @@ const ArticulosSection = () => {
   };
 
   const handleEdit = (articulo) => {
+    if (!hasPermission("articulos", "update")) {
+      toast.error("No tienes permisos para editar artículos", 3000);
+      return;
+    }
+
     setEditingArticulo(articulo);
-    // Only include editable fields, exclude ID and other non-editable fields
+    setFormData({
+      SKU: articulo.SKU,
+      Descripcion: articulo.Descripcion,
+      UnitCode: articulo.UnitCode,
+      GroupCode: articulo.GroupCode,
+      FamilyCode: articulo.FamilyCode,
+      KindCode: articulo.KindCode,
+      ColorCode: articulo.ColorCode,
+      Size: articulo.Size,
+      UPCCode: articulo.UPCCode,
+      QuantityPerLU: articulo.QuantityPerLU.toString(),
+    });
+    setShowModal(true);
+  };
+
+  const handleView = (articulo) => {
+    setViewingArticulo(articulo);
     setFormData({
       SKU: articulo.SKU,
       Descripcion: articulo.Descripcion,
@@ -122,6 +156,11 @@ const ArticulosSection = () => {
   };
 
   const handleDelete = async (id) => {
+    if (!hasPermission("articulos", "delete")) {
+      toast.error("No tienes permisos para eliminar artículos", 3000);
+      return;
+    }
+
     if (window.confirm("¿Estás seguro de que deseas eliminar este artículo?")) {
       try {
         await request(`/api/articulos/${id}`, { method: "DELETE" });
@@ -135,6 +174,11 @@ const ArticulosSection = () => {
   };
 
   const handlePrintLabels = (articulo) => {
+    if (!hasPermission("articulos", "print")) {
+      toast.error("No tienes permisos para imprimir etiquetas", 3000);
+      return;
+    }
+
     setArticuloToPrint(articulo);
     setShowPrintModal(true);
   };
@@ -148,7 +192,7 @@ const ArticulosSection = () => {
         size: articulo.Size,
         qty: articulo.QuantityPerLU,
         cantidad: cantidad,
-        articulo_id: articulo.ID, // ← NUEVO CAMPO AGREGADO
+        articulo_id: articulo.ID,
       };
 
       const response = await request("/api/articulos/print-labels", {
@@ -156,7 +200,6 @@ const ArticulosSection = () => {
         body: JSON.stringify(labelData),
       });
 
-      // Mostrar notificación de éxito mejorada
       toast.success(
         `${cantidad} ${
           cantidad === 1 ? "etiqueta generada" : "etiquetas generadas"
@@ -173,34 +216,46 @@ const ArticulosSection = () => {
     }
   };
 
+  // Determinar el título del modal
+  const getModalTitle = () => {
+    if (viewingArticulo) return "Ver Artículo";
+    if (editingArticulo) return "Editar Artículo";
+    return "Nuevo Artículo";
+  };
+
+  // Determinar si los campos deben ser readonly
+  const isReadOnly = viewingArticulo !== null;
+
   return (
     <div>
       <div className="header">
         <h1>Artículos</h1>
         <div className="header-actions">
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              // Reset form data when opening new article modal
-              setFormData({
-                SKU: "",
-                Descripcion: "",
-                UnitCode: "",
-                GroupCode: "",
-                FamilyCode: "",
-                KindCode: "",
-                ColorCode: "",
-                Size: "",
-                UPCCode: "",
-                QuantityPerLU: "0",
-              });
-              setEditingArticulo(null);
-              setShowModal(true);
-            }}
-          >
-            <Plus size={16} />
-            Nuevo Artículo
-          </button>
+          {hasPermission("articulos", "create") && (
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setFormData({
+                  SKU: "",
+                  Descripcion: "",
+                  UnitCode: "",
+                  GroupCode: "",
+                  FamilyCode: "",
+                  KindCode: "",
+                  ColorCode: "",
+                  Size: "",
+                  UPCCode: "",
+                  QuantityPerLU: "0",
+                });
+                setEditingArticulo(null);
+                setViewingArticulo(null);
+                setShowModal(true);
+              }}
+            >
+              <Plus size={16} />
+              Nuevo Artículo
+            </button>
+          )}
         </div>
       </div>
 
@@ -270,25 +325,41 @@ const ArticulosSection = () => {
                       </td>
                       <td>
                         <div style={{ display: "flex", gap: "0.5rem" }}>
+                          {/* Botón de ver (siempre disponible) */}
                           <button
                             className="btn btn-secondary"
-                            onClick={() => handleEdit(articulo)}
-                            title="Editar artículo"
+                            onClick={() => handleView(articulo)}
+                            title="Ver artículo"
                           >
-                            <Edit size={14} />
+                            <Eye size={14} />
                           </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => handlePrintLabels(articulo)}
-                            title="Imprimir etiquetas"
-                            style={{
-                              backgroundColor: "var(--success-50)",
-                              borderColor: "var(--success-600)",
-                              color: "var(--success-600)",
-                            }}
-                          >
-                            <Printer size={14} />
-                          </button>
+
+                          {/* Botón de editar (solo con permisos) */}
+                          {hasPermission("articulos", "update") && (
+                            <button
+                              className="btn btn-secondary"
+                              onClick={() => handleEdit(articulo)}
+                              title="Editar artículo"
+                            >
+                              <Edit size={14} />
+                            </button>
+                          )}
+
+                          {/* Botón de imprimir (solo con permisos) */}
+                          {hasPermission("articulos", "print") && (
+                            <button
+                              className="btn btn-secondary"
+                              onClick={() => handlePrintLabels(articulo)}
+                              title="Imprimir etiquetas"
+                              style={{
+                                backgroundColor: "var(--success-50)",
+                                borderColor: "var(--success-600)",
+                                color: "var(--success-600)",
+                              }}
+                            >
+                              <Printer size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -313,7 +384,7 @@ const ArticulosSection = () => {
         onClose={() => {
           setShowModal(false);
           setEditingArticulo(null);
-          // Reset form data when closing modal
+          setViewingArticulo(null);
           setFormData({
             SKU: "",
             Descripcion: "",
@@ -327,7 +398,7 @@ const ArticulosSection = () => {
             QuantityPerLU: "0",
           });
         }}
-        title={editingArticulo ? "Editar Artículo" : "Nuevo Artículo"}
+        title={getModalTitle()}
       >
         <div>
           <div className="form-group">
@@ -339,6 +410,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, SKU: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -352,6 +424,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, Descripcion: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -365,6 +438,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, UnitCode: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -378,6 +452,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, GroupCode: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -391,6 +466,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, FamilyCode: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -404,6 +480,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, KindCode: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -417,6 +494,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, ColorCode: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -430,6 +508,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, Size: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -443,6 +522,7 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({ ...formData, UPCCode: e.target.value })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -456,9 +536,10 @@ const ArticulosSection = () => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  QuantityPerLU: e.target.value, // Keep as string, don't parse to int
+                  QuantityPerLU: e.target.value,
                 })
               }
+              readOnly={isReadOnly}
               required
             />
           </div>
@@ -468,24 +549,28 @@ const ArticulosSection = () => {
               className="btn btn-secondary"
               onClick={() => setShowModal(false)}
             >
-              Cancelar
+              {isReadOnly ? "Cerrar" : "Cancelar"}
             </button>
-            <button className="btn btn-primary" onClick={handleSubmit}>
-              {editingArticulo ? "Actualizar" : "Crear"}
-            </button>
+            {!isReadOnly && (
+              <button className="btn btn-primary" onClick={handleSubmit}>
+                {editingArticulo ? "Actualizar" : "Crear"}
+              </button>
+            )}
           </div>
         </div>
       </Modal>
 
-      <PrintLabelsModal
-        isOpen={showPrintModal}
-        onClose={() => {
-          setShowPrintModal(false);
-          setArticuloToPrint(null);
-        }}
-        articulo={articuloToPrint}
-        onPrint={handleConfirmPrint}
-      />
+      {hasPermission("articulos", "print") && (
+        <PrintLabelsModal
+          isOpen={showPrintModal}
+          onClose={() => {
+            setShowPrintModal(false);
+            setArticuloToPrint(null);
+          }}
+          articulo={articuloToPrint}
+          onPrint={handleConfirmPrint}
+        />
+      )}
     </div>
   );
 };

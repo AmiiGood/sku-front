@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { RoleProvider } from "./contexts/RoleContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import Login from "./components/auth/Login";
 import Sidebar from "./components/layout/Sidebar";
@@ -7,11 +8,11 @@ import ArticulosSection from "./components/sections/ArticulosSection";
 import UsuariosSection from "./components/sections/UsuariosSection";
 import RolesSection from "./components/sections/RolesSection";
 import LogsSection from "./components/sections/LogsSection";
+import ImpresionesSection from "./components/sections/ImpresionesSection";
 
 // Importar los estilos
 import "./styles/globals.css";
 import "./styles/themes.css";
-import ImpresionesSection from "./components/sections/ImpresionesSection";
 
 // Componente principal de la aplicación
 const Dashboard = () => {
@@ -28,7 +29,7 @@ const Dashboard = () => {
       case "logs":
         return "Logs del Sistema";
       case "impresiones":
-        return "Impresiones de Etiquetas"
+        return "Impresiones de Etiquetas";
       default:
         return "Dashboard";
     }
@@ -52,13 +53,15 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="app">
-      <Sidebar
-        currentSection={currentSection}
-        setCurrentSection={setCurrentSection}
-      />
-      <div className="main-content">{renderSection()}</div>
-    </div>
+    <RoleProvider>
+      <div className="app">
+        <Sidebar
+          currentSection={currentSection}
+          setCurrentSection={setCurrentSection}
+        />
+        <div className="main-content">{renderSection()}</div>
+      </div>
+    </RoleProvider>
   );
 };
 
