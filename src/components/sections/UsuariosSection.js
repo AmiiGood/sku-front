@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Eye } from "lucide-react";
+import { Plus, Edit, Eye, Printer, TestTube } from "lucide-react";
 import { useApi } from "../../hooks/useApi";
 import { useRole } from "../../contexts/RoleContext";
 import { useToastContext } from "../../contexts/ToastContext";
@@ -8,6 +8,7 @@ import {
   ProtectedButton,
 } from "../common/ProtectedComponent";
 import Modal from "../common/Modal";
+import PrinterConfigModal from "../common/PrinterConfigModal";
 
 const UsuariosSection = () => {
   const { request } = useApi();
@@ -18,13 +19,18 @@ const UsuariosSection = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showPrinterModal, setShowPrinterModal] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState(null);
   const [viewingUsuario, setViewingUsuario] = useState(null);
+  const [printerConfigUser, setPrinterConfigUser] = useState(null);
   const [formData, setFormData] = useState({
     nombre: "",
     correo: "",
     contrasena: "",
     rol_id: "",
+    printer_ip: "",
+    printer_port: 9100,
+    printer_enabled: true,
   });
 
   const loadUsuarios = async () => {
@@ -103,17 +109,24 @@ const UsuariosSection = () => {
       setShowModal(false);
       setEditingUsuario(null);
       setViewingUsuario(null);
-      setFormData({
-        nombre: "",
-        correo: "",
-        contrasena: "",
-        rol_id: roles.length > 0 ? roles[0].id : "",
-      });
+      resetForm();
       loadUsuarios();
     } catch (error) {
       console.error("Error saving usuario:", error);
       toast.error("Error al guardar el usuario", 5000);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      nombre: "",
+      correo: "",
+      contrasena: "",
+      rol_id: roles.length > 0 ? roles[0].id : "",
+      printer_ip: "",
+      printer_port: 9100,
+      printer_enabled: true,
+    });
   };
 
   const handleEdit = (usuario) => {
@@ -129,6 +142,9 @@ const UsuariosSection = () => {
       correo: usuario.correo,
       contrasena: "",
       rol_id: usuario.rol_id,
+      printer_ip: usuario.printer_ip || "",
+      printer_port: usuario.printer_port || 9100,
+      printer_enabled: usuario.printer_enabled ?? true,
     });
     setShowModal(true);
   };
@@ -141,8 +157,16 @@ const UsuariosSection = () => {
       correo: usuario.correo,
       contrasena: "",
       rol_id: usuario.rol_id,
+      printer_ip: usuario.printer_ip || "",
+      printer_port: usuario.printer_port || 9100,
+      printer_enabled: usuario.printer_enabled ?? true,
     });
     setShowModal(true);
+  };
+
+  const handlePrinterConfig = (usuario) => {
+    setPrinterConfigUser(usuario);
+    setShowPrinterModal(true);
   };
 
   const handleToggleStatus = async (id) => {
@@ -164,6 +188,30 @@ const UsuariosSection = () => {
     }
   };
 
+  const testPrinter = async (printerIp, printerPort) => {
+    try {
+      const response = await request("/api/printer/test", {
+        method: "POST",
+        body: JSON.stringify({
+          printer_ip: printerIp,
+          printer_port: printerPort,
+        }),
+      });
+
+      if (response.success) {
+        toast.success("Conexión con la impresora exitosa", 3000);
+        return true;
+      } else {
+        toast.error("Error al conectar con la impresora", 3000);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error testing printer:", error);
+      toast.error("Error al probar la impresora: " + error.message, 5000);
+      return false;
+    }
+  };
+
   const getModalTitle = () => {
     if (viewingUsuario) return "Ver Usuario";
     if (editingUsuario) return "Editar Usuario";
@@ -171,6 +219,22 @@ const UsuariosSection = () => {
   };
 
   const isReadOnly = viewingUsuario !== null;
+
+  const renderPrinterStatus = (usuario) => {
+    if (!usuario.printer_ip) {
+      return <span className="badge badge-warning">Sin configurar</span>;
+    }
+
+    if (!usuario.printer_enabled) {
+      return <span className="badge badge-danger">Deshabilitada</span>;
+    }
+
+    return (
+      <span className="badge badge-success">
+        {usuario.printer_ip}:{usuario.printer_port || 9100}
+      </span>
+    );
+  };
 
   return (
     <div>
@@ -182,12 +246,7 @@ const UsuariosSection = () => {
             action="create"
             className="btn btn-primary"
             onClick={() => {
-              setFormData({
-                nombre: "",
-                correo: "",
-                contrasena: "",
-                rol_id: roles.length > 0 ? roles[0].id : "",
-              });
+              resetForm();
               setEditingUsuario(null);
               setViewingUsuario(null);
               setShowModal(true);
@@ -214,6 +273,7 @@ const UsuariosSection = () => {
                   <th>Correo</th>
                   <th>Rol</th>
                   <th>Estado</th>
+                  <th>Impresora</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -236,9 +296,10 @@ const UsuariosSection = () => {
                         {usuario.estado ? "Activo" : "Inactivo"}
                       </span>
                     </td>
+                    <td>{renderPrinterStatus(usuario)}</td>
                     <td>
                       <div style={{ display: "flex", gap: "0.5rem" }}>
-                        {/* Botón de ver (siempre disponible si tiene permiso de lectura) */}
+                        {/* Botón de ver */}
                         <button
                           className="btn btn-secondary"
                           onClick={() => handleView(usuario)}
@@ -247,7 +308,7 @@ const UsuariosSection = () => {
                           <Eye size={14} />
                         </button>
 
-                        {/* Botón de editar (solo con permisos) */}
+                        {/* Botón de editar */}
                         <ProtectedButton
                           module="usuarios"
                           action="update"
@@ -258,7 +319,23 @@ const UsuariosSection = () => {
                           <Edit size={14} />
                         </ProtectedButton>
 
-                        {/* Botón de cambiar estado (solo con permisos) */}
+                        {/* Botón de configurar impresora */}
+                        <ProtectedButton
+                          module="usuarios"
+                          action="update"
+                          className="btn btn-secondary"
+                          onClick={() => handlePrinterConfig(usuario)}
+                          title="Configurar impresora"
+                          style={{
+                            backgroundColor: "var(--primary-50)",
+                            borderColor: "var(--primary-600)",
+                            color: "var(--primary-600)",
+                          }}
+                        >
+                          <Printer size={14} />
+                        </ProtectedButton>
+
+                        {/* Botón de cambiar estado */}
                         <ProtectedButton
                           module="usuarios"
                           action="delete"
@@ -284,18 +361,14 @@ const UsuariosSection = () => {
         )}
       </div>
 
+      {/* Modal principal de usuario */}
       <Modal
         isOpen={showModal}
         onClose={() => {
           setShowModal(false);
           setEditingUsuario(null);
           setViewingUsuario(null);
-          setFormData({
-            nombre: "",
-            correo: "",
-            contrasena: "",
-            rol_id: roles.length > 0 ? roles[0].id : "",
-          });
+          resetForm();
         }}
         title={getModalTitle()}
       >
@@ -363,6 +436,99 @@ const UsuariosSection = () => {
             </select>
           </div>
 
+          {/* Configuración de impresora */}
+          <div
+            style={{
+              marginTop: "1.5rem",
+              paddingTop: "1.5rem",
+              borderTop: "1px solid var(--gray-200)",
+            }}
+          >
+            <h3
+              style={{
+                marginBottom: "1rem",
+                fontSize: "1rem",
+                fontWeight: "600",
+              }}
+            >
+              Configuración de Impresora
+            </h3>
+
+            <div className="form-group">
+              <label className="form-label">IP de Impresora</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="192.168.1.100"
+                value={formData.printer_ip}
+                onChange={(e) =>
+                  setFormData({ ...formData, printer_ip: e.target.value })
+                }
+                readOnly={isReadOnly}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Puerto de Impresora</label>
+              <input
+                type="number"
+                className="form-input"
+                placeholder="9100"
+                value={formData.printer_port}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    printer_port: parseInt(e.target.value) || 9100,
+                  })
+                }
+                readOnly={isReadOnly}
+                min="1"
+                max="65535"
+              />
+            </div>
+
+            <div className="form-group">
+              <label
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.printer_enabled}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      printer_enabled: e.target.checked,
+                    })
+                  }
+                  disabled={isReadOnly}
+                />
+                <span className="form-label" style={{ margin: 0 }}>
+                  Impresora habilitada
+                </span>
+              </label>
+            </div>
+
+            {/* Botón de prueba */}
+            {!isReadOnly && formData.printer_ip && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() =>
+                  testPrinter(formData.printer_ip, formData.printer_port)
+                }
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginTop: "0.5rem",
+                }}
+              >
+                <TestTube size={14} />
+                Probar Conexión
+              </button>
+            )}
+          </div>
+
           <div className="modal-footer">
             <button
               className="btn btn-secondary"
@@ -378,6 +544,21 @@ const UsuariosSection = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Modal de configuración de impresora */}
+      <PrinterConfigModal
+        isOpen={showPrinterModal}
+        onClose={() => {
+          setShowPrinterModal(false);
+          setPrinterConfigUser(null);
+        }}
+        usuario={printerConfigUser}
+        onSave={() => {
+          loadUsuarios();
+          setShowPrinterModal(false);
+          setPrinterConfigUser(null);
+        }}
+      />
     </div>
   );
 };

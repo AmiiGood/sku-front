@@ -1,5 +1,14 @@
-import React, { useState } from "react";
-import { Printer, Plus, Minus, Eye, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Printer,
+  Plus,
+  Minus,
+  Eye,
+  X,
+  Settings,
+  AlertTriangle,
+} from "lucide-react";
+import { useApi } from "../../hooks/useApi";
 
 const LabelPreview = ({ articulo, cantidad }) => {
   const now = new Date();
@@ -219,8 +228,31 @@ const LabelPreview = ({ articulo, cantidad }) => {
 };
 
 const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
+  const { request } = useApi();
   const [cantidad, setCantidad] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [printerConfig, setPrinterConfig] = useState(null);
+  const [configLoading, setConfigLoading] = useState(false);
+
+  // Cargar configuración de impresora del usuario
+  useEffect(() => {
+    if (isOpen) {
+      loadPrinterConfig();
+    }
+  }, [isOpen]);
+
+  const loadPrinterConfig = async () => {
+    try {
+      setConfigLoading(true);
+      const response = await request("/api/articulos/me/printer-config");
+      setPrinterConfig(response.data);
+    } catch (error) {
+      console.error("Error loading printer config:", error);
+      setPrinterConfig(null);
+    } finally {
+      setConfigLoading(false);
+    }
+  };
 
   if (!isOpen || !articulo) return null;
 
@@ -231,6 +263,15 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
   };
 
   const handlePrint = async () => {
+    // Verificar configuración de impresora
+    if (!printerConfig || !printerConfig.printer_ip) {
+      return;
+    }
+
+    if (!printerConfig.printer_enabled) {
+      return;
+    }
+
     setLoading(true);
     try {
       await onPrint(articulo, cantidad);
@@ -249,6 +290,131 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
       onClose();
     }
   };
+
+  const renderPrinterStatus = () => {
+    if (configLoading) {
+      return (
+        <div
+          style={{
+            padding: "1rem",
+            backgroundColor: "var(--gray-50)",
+            borderRadius: "var(--border-radius)",
+            textAlign: "center",
+            color: "var(--gray-600)",
+          }}
+        >
+          Verificando configuración de impresora...
+        </div>
+      );
+    }
+
+    if (!printerConfig || !printerConfig.printer_ip) {
+      return (
+        <div
+          style={{
+            padding: "1rem",
+            backgroundColor: "var(--warning-50)",
+            borderRadius: "var(--border-radius)",
+            border: "1px solid var(--warning-200)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              color: "var(--warning-800)",
+              marginBottom: "0.5rem",
+            }}
+          >
+            <AlertTriangle size={16} />
+            <strong>Impresora no configurada</strong>
+          </div>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.875rem",
+              color: "var(--warning-700)",
+            }}
+          >
+            Necesitas configurar tu impresora personal antes de poder imprimir
+            etiquetas.
+          </p>
+        </div>
+      );
+    }
+
+    if (!printerConfig.printer_enabled) {
+      return (
+        <div
+          style={{
+            padding: "1rem",
+            backgroundColor: "var(--error-50)",
+            borderRadius: "var(--border-radius)",
+            border: "1px solid var(--error-200)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              color: "var(--error-800)",
+              marginBottom: "0.5rem",
+            }}
+          >
+            <AlertTriangle size={16} />
+            <strong>Impresora deshabilitada</strong>
+          </div>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.875rem",
+              color: "var(--error-700)",
+            }}
+          >
+            Tu impresora está deshabilitada. Contacta al administrador.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        style={{
+          padding: "1rem",
+          backgroundColor: "var(--success-50)",
+          borderRadius: "var(--border-radius)",
+          border: "1px solid var(--success-200)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            color: "var(--success-800)",
+            marginBottom: "0.5rem",
+          }}
+        >
+          <Printer size={16} />
+          <strong>Impresora configurada</strong>
+        </div>
+        <p
+          style={{
+            margin: 0,
+            fontSize: "0.875rem",
+            color: "var(--success-700)",
+          }}
+        >
+          {printerConfig.printer_ip}:{printerConfig.printer_port || 9100}
+        </p>
+      </div>
+    );
+  };
+
+  const canPrint =
+    printerConfig && printerConfig.printer_ip && printerConfig.printer_enabled;
 
   return (
     <div className="modal" onClick={onClose}>
@@ -270,6 +436,7 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
         </div>
 
         <div style={{ marginBottom: "1.5rem" }}>
+          {/* Información del artículo */}
           <div
             style={{
               display: "flex",
@@ -306,134 +473,141 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
             </div>
           </div>
 
-          {/* Selector de cantidad */}
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label className="form-label" style={{ marginBottom: "0.75rem" }}>
-              Cantidad de etiquetas a imprimir
-            </label>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                justifyContent: "center",
-              }}
-            >
-              <button
-                className="btn btn-secondary"
-                onClick={() => handleCantidadChange(cantidad - 1)}
-                disabled={cantidad <= 1}
+          {/* Estado de la impresora */}
+          <div style={{ marginBottom: "1.5rem" }}>{renderPrinterStatus()}</div>
+
+          {/* Selector de cantidad - solo si puede imprimir */}
+          {canPrint && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label className="form-label" style={{ marginBottom: "0.75rem" }}>
+                Cantidad de etiquetas a imprimir
+              </label>
+              <div
                 style={{
-                  minWidth: "40px",
-                  height: "40px",
-                  padding: "0",
                   display: "flex",
                   alignItems: "center",
+                  gap: "1rem",
                   justifyContent: "center",
                 }}
               >
-                <Minus size={16} />
-              </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => handleCantidadChange(cantidad - 1)}
+                  disabled={cantidad <= 1}
+                  style={{
+                    minWidth: "40px",
+                    height: "40px",
+                    padding: "0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Minus size={16} />
+                </button>
 
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={cantidad}
+                    onChange={(e) =>
+                      handleCantidadChange(parseInt(e.target.value) || 1)
+                    }
+                    style={{
+                      width: "80px",
+                      textAlign: "center",
+                      fontSize: "1.25rem",
+                      fontWeight: "600",
+                      padding: "0.5rem",
+                      border: "2px solid var(--primary-600)",
+                      borderRadius: "var(--border-radius)",
+                      backgroundColor: "var(--white)",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "var(--gray-600)",
+                      minWidth: "60px",
+                    }}
+                  >
+                    {cantidad === 1 ? "etiqueta" : "etiquetas"}
+                  </span>
+                </div>
+
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => handleCantidadChange(cantidad + 1)}
+                  disabled={cantidad >= 100}
+                  style={{
+                    minWidth: "40px",
+                    height: "40px",
+                    padding: "0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+
+              {/* Botones de cantidad rápida */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.5rem",
+                  justifyContent: "center",
+                  marginTop: "1rem",
+                }}
+              >
+                {[1, 5, 10, 25, 50].map((num) => (
+                  <button
+                    key={num}
+                    className={`btn ${
+                      cantidad === num ? "btn-primary" : "btn-secondary"
+                    }`}
+                    onClick={() => setCantidad(num)}
+                    style={{
+                      minWidth: "40px",
+                      fontSize: "0.75rem",
+                      padding: "0.25rem 0.5rem",
+                    }}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Vista previa - solo si puede imprimir */}
+          {canPrint && (
+            <div>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "0.5rem",
+                  marginBottom: "0.75rem",
                 }}
               >
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={cantidad}
-                  onChange={(e) =>
-                    handleCantidadChange(parseInt(e.target.value) || 1)
-                  }
-                  style={{
-                    width: "80px",
-                    textAlign: "center",
-                    fontSize: "1.25rem",
-                    fontWeight: "600",
-                    padding: "0.5rem",
-                    border: "2px solid var(--primary-600)",
-                    borderRadius: "var(--border-radius)",
-                    backgroundColor: "var(--white)",
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: "0.875rem",
-                    color: "var(--gray-600)",
-                    minWidth: "60px",
-                  }}
-                >
-                  {cantidad === 1 ? "etiqueta" : "etiquetas"}
-                </span>
+                <Eye size={16} />
+                <label className="form-label" style={{ margin: 0 }}>
+                  Vista previa de la etiqueta (Zebra ZPL)
+                </label>
               </div>
-
-              <button
-                className="btn btn-secondary"
-                onClick={() => handleCantidadChange(cantidad + 1)}
-                disabled={cantidad >= 100}
-                style={{
-                  minWidth: "40px",
-                  height: "40px",
-                  padding: "0",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Plus size={16} />
-              </button>
+              <LabelPreview articulo={articulo} cantidad={cantidad} />
             </div>
-
-            {/* Botones de cantidad rápida */}
-            <div
-              style={{
-                display: "flex",
-                gap: "0.5rem",
-                justifyContent: "center",
-                marginTop: "1rem",
-              }}
-            >
-              {[1, 5, 10, 25, 50].map((num) => (
-                <button
-                  key={num}
-                  className={`btn ${
-                    cantidad === num ? "btn-primary" : "btn-secondary"
-                  }`}
-                  onClick={() => setCantidad(num)}
-                  style={{
-                    minWidth: "40px",
-                    fontSize: "0.75rem",
-                    padding: "0.25rem 0.5rem",
-                  }}
-                >
-                  {num}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Vista previa */}
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                marginBottom: "0.75rem",
-              }}
-            >
-              <Eye size={16} />
-              <label className="form-label" style={{ margin: 0 }}>
-                Vista previa de la etiqueta (Zebra ZPL)
-              </label>
-            </div>
-            <LabelPreview articulo={articulo} cantidad={cantidad} />
-          </div>
+          )}
 
           {/* Información adicional */}
           <div
@@ -447,8 +621,9 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
               textAlign: "center",
             }}
           >
-            💡 Preview basado en el formato ZPL real de la impresora Zebra •
-            Incluye código QR único con trazabilidad completa
+            {canPrint
+              ? "💡 Preview basado en el formato ZPL real de la impresora Zebra • Incluye código QR único con trazabilidad completa"
+              : "⚠️ Configura tu impresora personal en el menú lateral para poder imprimir etiquetas"}
           </div>
         </div>
 
@@ -460,19 +635,33 @@ const PrintLabelsModal = ({ isOpen, onClose, articulo, onPrint }) => {
           >
             Cancelar
           </button>
-          <button
-            className="btn btn-primary"
-            onClick={handlePrint}
-            disabled={loading}
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-          >
-            <Printer size={16} />
-            {loading
-              ? "Imprimiendo..."
-              : `Imprimir ${cantidad} ${
-                  cantidad === 1 ? "etiqueta" : "etiquetas"
-                }`}
-          </button>
+          {canPrint ? (
+            <button
+              className="btn btn-primary"
+              onClick={handlePrint}
+              disabled={loading}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <Printer size={16} />
+              {loading
+                ? "Imprimiendo..."
+                : `Imprimir ${cantidad} ${
+                    cantidad === 1 ? "etiqueta" : "etiquetas"
+                  }`}
+            </button>
+          ) : (
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                onClose();
+                // Aquí podrías abrir el modal de configuración de impresora si fuera necesario
+              }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <Settings size={16} />
+              Configurar Impresora
+            </button>
+          )}
         </div>
       </div>
     </div>

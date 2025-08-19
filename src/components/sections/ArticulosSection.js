@@ -7,6 +7,7 @@ import Modal from "../common/Modal";
 import Pagination from "../common/Pagination";
 import SearchInput from "../common/SearchInput";
 import PrintLabelsModal from "../common/PrintLabelsModal";
+import PrinterStatusWidget from "../common/PrinterStatusWidget";
 
 const ArticulosSection = () => {
   const { request } = useApi();
@@ -258,6 +259,9 @@ const ArticulosSection = () => {
           )}
         </div>
       </div>
+
+      {/* Widget de estado de impresora */}
+      <PrinterStatusWidget />
 
       <SearchInput
         value={search}

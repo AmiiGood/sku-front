@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Package,
   Users,
@@ -6,9 +6,11 @@ import {
   Activity,
   LogOut,
   Printer,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRole } from "../../contexts/RoleContext";
+import UserPrinterSettings from "../common/UserPrinterSettings";
 
 const ExtraLightLogo = () => (
   <div
@@ -33,7 +35,8 @@ const ExtraLightLogo = () => (
 
 const Sidebar = ({ currentSection, setCurrentSection }) => {
   const { logout } = useAuth();
-  const { canAccessModule, roleName } = useRole();
+  const { canAccessModule, roleName, hasPermission } = useRole();
+  const [showPrinterSettings, setShowPrinterSettings] = useState(false);
 
   // Definir todos los items de navegación con sus condiciones de acceso
   const allNavItems = [
@@ -84,6 +87,9 @@ const Sidebar = ({ currentSection, setCurrentSection }) => {
       }
     }
   }, [currentSection, navItems, setCurrentSection, canAccessModule]);
+
+  // Verificar si el usuario puede imprimir etiquetas
+  const canPrint = hasPermission("articulos", "print");
 
   // Si no hay items disponibles, mostrar solo el logout
   if (navItems.length === 0) {
@@ -162,11 +168,35 @@ const Sidebar = ({ currentSection, setCurrentSection }) => {
           </button>
         ))}
 
+        {/* Separador */}
+        <div
+          style={{
+            borderTop: "1px solid var(--gray-200)",
+            margin: "1rem 0",
+          }}
+        />
+
+        {/* Configuración de impresora personal (solo si puede imprimir) */}
+        {canPrint && (
+          <button
+            className="nav-item"
+            onClick={() => setShowPrinterSettings(true)}
+            style={{
+              color: "var(--primary-600)",
+              fontSize: "0.8rem",
+            }}
+          >
+            <Settings size={16} />
+            Mi Impresora
+          </button>
+        )}
+
+        {/* Cerrar sesión */}
         <button
           className="nav-item"
           onClick={logout}
           style={{
-            marginTop: "2rem",
+            marginTop: "1rem",
             color: "var(--gray-500)",
             borderTop: "1px solid var(--gray-200)",
             paddingTop: "1rem",
@@ -176,6 +206,12 @@ const Sidebar = ({ currentSection, setCurrentSection }) => {
           Cerrar Sesión
         </button>
       </nav>
+
+      {/* Modal de configuración de impresora */}
+      <UserPrinterSettings
+        isOpen={showPrinterSettings}
+        onClose={() => setShowPrinterSettings(false)}
+      />
     </div>
   );
 };
