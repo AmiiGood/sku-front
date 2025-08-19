@@ -9,6 +9,7 @@ import UsuariosSection from "./components/sections/UsuariosSection";
 import RolesSection from "./components/sections/RolesSection";
 import LogsSection from "./components/sections/LogsSection";
 import ImpresionesSection from "./components/sections/ImpresionesSection";
+import DefectivosSection from "./components/sections/DefectivoSection";
 
 // Importar los estilos
 import "./styles/globals.css";
@@ -30,6 +31,8 @@ const Dashboard = () => {
         return "Logs del Sistema";
       case "impresiones":
         return "Impresiones de Etiquetas";
+      case "defectivos":
+        return "Control de Defectivos";
       default:
         return "Dashboard";
     }
@@ -47,6 +50,8 @@ const Dashboard = () => {
         return <LogsSection />;
       case "impresiones":
         return <ImpresionesSection />;
+      case "defectivos":
+        return <DefectivosSection />;
       default:
         return <ArticulosSection />;
     }

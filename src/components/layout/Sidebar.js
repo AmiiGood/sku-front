@@ -7,6 +7,7 @@ import {
   LogOut,
   Printer,
   Settings,
+  AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRole } from "../../contexts/RoleContext";
@@ -45,6 +46,12 @@ const Sidebar = ({ currentSection, setCurrentSection }) => {
       label: "Artículos",
       icon: Package,
       module: "articulos",
+    },
+    {
+      id: "defectivos",
+      label: "Defectivos",
+      icon: AlertTriangle,
+      module: "defectivos",
     },
     {
       id: "usuarios",

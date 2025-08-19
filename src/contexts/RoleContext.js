@@ -1,12 +1,12 @@
-import React, { createContext, useContext } from 'react';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext } from "react";
+import { useAuth } from "./AuthContext";
 
 const RoleContext = createContext();
 
 export const useRole = () => {
   const context = useContext(RoleContext);
   if (!context) {
-    throw new Error('useRole must be used within a RoleProvider');
+    throw new Error("useRole must be used within a RoleProvider");
   }
   return context;
 };
@@ -15,13 +15,13 @@ export const useRole = () => {
 export const ROLES = {
   ADMINISTRADOR: 2,
   OPERADOR: 5,
-  GENERADOR: 6
+  GENERADOR: 6,
 };
 
 export const ROLE_NAMES = {
-  [ROLES.ADMINISTRADOR]: 'Administrador',
-  [ROLES.OPERADOR]: 'Operador',
-  [ROLES.GENERADOR]: 'Generador'
+  [ROLES.ADMINISTRADOR]: "Administrador",
+  [ROLES.OPERADOR]: "Operador",
+  [ROLES.GENERADOR]: "Generador",
 };
 
 // Definición de permisos por rol
@@ -32,27 +32,33 @@ const PERMISSIONS = {
       create: true,
       update: true,
       delete: true,
-      print: true
+      print: true,
     },
     usuarios: {
       read: true,
       create: true,
       update: true,
-      delete: true
+      delete: true,
     },
     roles: {
       read: true,
       create: true,
       update: true,
-      delete: true
+      delete: true,
     },
     logs: {
       read: true,
-      delete: true
+      delete: true,
     },
     impresiones: {
-      read: true
-    }
+      read: true,
+    },
+    defectivos: {
+      read: true,
+      create: true,
+      update: true,
+      delete: true,
+    },
   },
   [ROLES.OPERADOR]: {
     articulos: {
@@ -60,27 +66,33 @@ const PERMISSIONS = {
       create: false,
       update: false,
       delete: false,
-      print: true
+      print: true,
     },
     usuarios: {
       read: false,
       create: false,
       update: false,
-      delete: false
+      delete: false,
     },
     roles: {
       read: false,
       create: false,
       update: false,
-      delete: false
+      delete: false,
     },
     logs: {
       read: false,
-      delete: false
+      delete: false,
     },
     impresiones: {
-      read: true
-    }
+      read: true,
+    },
+    defectivos: {
+      read: true,
+      create: true,
+      update: false,
+      delete: false,
+    },
   },
   [ROLES.GENERADOR]: {
     articulos: {
@@ -88,33 +100,39 @@ const PERMISSIONS = {
       create: true,
       update: true,
       delete: false,
-      print: false
+      print: false,
     },
     usuarios: {
       read: false,
       create: false,
       update: false,
-      delete: false
+      delete: false,
     },
     roles: {
       read: false,
       create: false,
       update: false,
-      delete: false
+      delete: false,
     },
     logs: {
       read: false,
-      delete: false
+      delete: false,
     },
     impresiones: {
-      read: false
-    }
-  }
+      read: false,
+    },
+    defectivos: {
+      read: true,
+      create: true,
+      update: true,
+      delete: false,
+    },
+  },
 };
 
 export const RoleProvider = ({ children }) => {
   const { user } = useAuth();
-  
+
   const getUserRole = () => {
     if (!user || !user.rol_id) return null;
     return user.rol_id;
@@ -122,28 +140,30 @@ export const RoleProvider = ({ children }) => {
 
   const getRoleName = () => {
     const roleId = getUserRole();
-    return ROLE_NAMES[roleId] || 'Usuario';
+    return ROLE_NAMES[roleId] || "Usuario";
   };
 
   const hasPermission = (module, action) => {
     const roleId = getUserRole();
     if (!roleId || !PERMISSIONS[roleId]) return false;
-    
+
     const modulePermissions = PERMISSIONS[roleId][module];
     if (!modulePermissions) return false;
-    
+
     return modulePermissions[action] === true;
   };
 
   const canAccessModule = (module) => {
     const roleId = getUserRole();
     if (!roleId || !PERMISSIONS[roleId]) return false;
-    
+
     const modulePermissions = PERMISSIONS[roleId][module];
     if (!modulePermissions) return false;
-    
+
     // Si tiene al menos un permiso en el módulo, puede acceder
-    return Object.values(modulePermissions).some(permission => permission === true);
+    return Object.values(modulePermissions).some(
+      (permission) => permission === true
+    );
   };
 
   const isAdmin = () => {
@@ -165,24 +185,28 @@ export const RoleProvider = ({ children }) => {
 
     const sections = [];
 
-    if (canAccessModule('articulos')) {
-      sections.push('articulos');
+    if (canAccessModule("articulos")) {
+      sections.push("articulos");
     }
-    
-    if (canAccessModule('usuarios')) {
-      sections.push('usuarios');
+
+    if (canAccessModule("usuarios")) {
+      sections.push("usuarios");
     }
-    
-    if (canAccessModule('roles')) {
-      sections.push('roles');
+
+    if (canAccessModule("roles")) {
+      sections.push("roles");
     }
-    
-    if (canAccessModule('logs')) {
-      sections.push('logs');
+
+    if (canAccessModule("logs")) {
+      sections.push("logs");
     }
-    
-    if (canAccessModule('impresiones')) {
-      sections.push('impresiones');
+
+    if (canAccessModule("impresiones")) {
+      sections.push("impresiones");
+    }
+
+    if (canAccessModule("defectivos")) {
+      sections.push("defectivos");
     }
 
     return sections;
@@ -198,12 +222,8 @@ export const RoleProvider = ({ children }) => {
     isGenerador,
     getAvailableSections,
     ROLES,
-    ROLE_NAMES
+    ROLE_NAMES,
   };
 
-  return (
-    <RoleContext.Provider value={value}>
-      {children}
-    </RoleContext.Provider>
-  );
+  return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
 };

@@ -795,3 +795,307 @@ h6 {
     transform: rotate(360deg);
   }
 }
+
+/* Estilos adicionales para el módulo de defectivos */
+
+/* Badge específico para defectivos */
+.badge-primary {
+  background-color: var(--primary-50);
+  color: var(--primary-800);
+  border-color: var(--primary-200);
+}
+
+.badge-secondary {
+  background-color: var(--gray-50);
+  color: var(--gray-800);
+  border-color: var(--gray-200);
+}
+
+/* Selector de defectos con muchas opciones */
+.defectos-select {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius);
+}
+
+.defectos-select:focus {
+  border-color: var(--black);
+  box-shadow: 0 0 0 2px rgb(0 0 0 / 0.1);
+}
+
+.defectos-select option {
+  padding: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.defectos-select option:hover {
+  background-color: var(--gray-50);
+}
+
+/* Estilo para turnos A, B, C */
+.turno-badge.turno-a {
+  background-color: var(--success-50);
+  color: var(--success-800);
+  border-color: var(--success-200);
+}
+
+.turno-badge.turno-b {
+  background-color: var(--warning-50);
+  color: var(--warning-800);
+  border-color: var(--warning-200);
+}
+
+.turno-badge.turno-c {
+  background-color: var(--error-50);
+  color: var(--error-800);
+  border-color: var(--error-200);
+}
+
+/* Estilos para las estadísticas de defectivos */
+.defectivos-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.defectivos-stat-card {
+  padding: 1rem;
+  border-radius: var(--border-radius-lg);
+  text-align: center;
+  border: 1px solid;
+}
+
+.defectivos-stat-card.registros {
+  background-color: var(--primary-50);
+  border-color: var(--primary-200);
+}
+
+.defectivos-stat-card.pares {
+  background-color: var(--error-50);
+  border-color: var(--error-200);
+}
+
+.defectivos-stat-card.promedio {
+  background-color: var(--warning-50);
+  border-color: var(--warning-200);
+}
+
+.defectivos-stat-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.defectivos-stat-label {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+/* Filtros de defectivos */
+.defectivos-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background-color: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius-lg);
+}
+
+/* Iconos específicos para defectivos */
+.defectivos-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.defectivos-icon.warning {
+  background-color: var(--warning-100);
+  color: var(--warning-600);
+}
+
+.defectivos-icon.error {
+  background-color: var(--error-100);
+  color: var(--error-600);
+}
+
+.defectivos-icon.success {
+  background-color: var(--success-100);
+  color: var(--success-600);
+}
+
+/* Tabla específica de defectivos */
+.defectivos-table .table tbody tr:hover {
+  background-color: var(--gray-50);
+  transition: background-color 0.15s ease;
+}
+
+.defectivos-table .user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.defectivos-table .user-name {
+  font-weight: 500;
+  color: var(--black);
+}
+
+.defectivos-table .user-email {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+}
+
+/* Modal de estadísticas específico */
+.defectivos-stats-modal .modal-content {
+  max-width: 800px;
+  max-height: 80vh;
+}
+
+.defectivos-stats-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--gray-50);
+  border-radius: var(--border-radius);
+}
+
+.defectivos-stats-summary .stat-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--black);
+}
+
+.defectivos-stats-summary .stat-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  margin-top: 0.25rem;
+}
+
+/* Responsive para defectivos */
+@media (max-width: 768px) {
+  .defectivos-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .defectivos-filters {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .defectivos-stats-summary {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .defectivos-table .user-info {
+    gap: 0.125rem;
+  }
+
+  .defectivos-table .user-email {
+    font-size: 0.7rem;
+  }
+}
+
+/* Animaciones para los badges de defectivos */
+.badge-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.badge-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.badge-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+/* Indicadores visuales para tipos de defectos */
+.defecto-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.defecto-badge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background-color: var(--error-600);
+}
+
+/* Estados de carga específicos para defectivos */
+.defectivos-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+.defectivos-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--gray-500);
+  font-size: 0.875rem;
+}
+
+.defectivos-empty .empty-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  opacity: 0.5;
+}
+
+/* Mejoras visuales para los filtros */
+.defectivos-filters .form-group:last-child {
+  display: flex;
+  align-items: end;
+}
+
+.defectivos-filters .btn {
+  height: fit-content;
+  white-space: nowrap;
+  -align: center;
+  padding: 3rem 1rem;
+  color: var(--gray-500);
+  font-size: 0.875rem;
+}
+
+.defectivos-empty .empty-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  opacity: 0.5;
+}
+
+/* Mejoras visuales para los filtros */
+.defectivos-filters .form-group:last-child {
+  display: flex;
+  align-items: end;
+}
+
+.defectivos-filters .btn {
+  height: fit-content;
+  white-space: nowrap;
+}
