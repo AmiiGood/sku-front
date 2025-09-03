@@ -1099,3 +1099,498 @@ h6 {
   height: fit-content;
   white-space: nowrap;
 }
+
+/* Estilos específicos para el sistema de áreas */
+
+/* Colores actualizados para las áreas */
+:root {
+  /* Colores para área de TI */
+  --ti-50: #f8fafc;
+  --ti-100: #f1f5f9;
+  --ti-200: #e2e8f0;
+  --ti-600: #475569;
+  --ti-800: #334155;
+
+  /* Colores para área de Planeación */
+  --planeacion-50: #f0fdf4;
+  --planeacion-100: #dcfce7;
+  --planeacion-200: #bbf7d0;
+  --planeacion-600: #16a34a;
+  --planeacion-800: #166534;
+
+  /* Colores para área de Calidad */
+  --calidad-50: #fffbeb;
+  --calidad-100: #fef3c7;
+  --calidad-200: #fde68a;
+  --calidad-600: #d97706;
+  --calidad-800: #92400e;
+}
+
+/* Actualizar colores de success, error y warning para las áreas */
+.theme-areas {
+  --success-50: var(--planeacion-50);
+  --success-100: var(--planeacion-100);
+  --success-200: var(--planeacion-200);
+  --success-600: var(--planeacion-600);
+  --success-800: var(--planeacion-800);
+
+  --warning-50: var(--calidad-50);
+  --warning-100: var(--calidad-100);
+  --warning-200: var(--calidad-200);
+  --warning-600: var(--calidad-600);
+  --warning-800: var(--calidad-800);
+}
+
+/* Estilos para separadores de área en sidebar */
+.area-separator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem 0.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.area-separator:first-child {
+  margin-top: 0;
+}
+
+/* Estilos para items de navegación por área */
+.nav-item.area-module {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Indicador de área en header del sidebar */
+.area-badge {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  background-color: var(--primary-50);
+  color: var(--primary-600);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+/* Estilos para el AreaIndicator */
+.area-indicator {
+  background-color: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius-lg);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.area-indicator:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Variantes por área */
+.area-indicator.ti {
+  background-color: var(--ti-50);
+  border-color: var(--ti-200);
+}
+
+.area-indicator.ti .area-title {
+  color: var(--ti-800);
+}
+
+.area-indicator.ti .area-role {
+  color: var(--ti-600);
+}
+
+.area-indicator.planeacion {
+  background-color: var(--planeacion-50);
+  border-color: var(--planeacion-200);
+}
+
+.area-indicator.planeacion .area-title {
+  color: var(--planeacion-800);
+}
+
+.area-indicator.planeacion .area-role {
+  color: var(--planeacion-600);
+}
+
+.area-indicator.calidad {
+  background-color: var(--calidad-50);
+  border-color: var(--calidad-200);
+}
+
+.area-indicator.calidad .area-title {
+  color: var(--calidad-800);
+}
+
+.area-indicator.calidad .area-role {
+  color: var(--calidad-600);
+}
+
+/* Responsive para sidebar con áreas */
+@media (max-width: 768px) {
+  .area-separator {
+    font-size: 0.7rem;
+    padding: 0.5rem 0.25rem 0.25rem;
+    margin-top: 1rem;
+  }
+
+  .nav-item.area-module {
+    margin-left: 0.25rem;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .area-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+/* Animaciones para cambios de área */
+.area-transition {
+  transition: all 0.3s ease;
+}
+
+/* Estados de rol específicos */
+.role-administrador {
+  border-left: 3px solid var(--ti-600);
+}
+
+.role-generador {
+  border-left: 3px solid var(--planeacion-600);
+}
+
+.role-operador {
+  border-left: 3px solid var(--planeacion-600);
+}
+
+.role-calidad {
+  border-left: 3px solid var(--calidad-600);
+}
+
+/* Badges específicos por rol */
+.badge.role-administrador {
+  background-color: var(--ti-50);
+  color: var(--ti-800);
+  border-color: var(--ti-200);
+}
+
+.badge.role-generador,
+.badge.role-operador {
+  background-color: var(--planeacion-50);
+  color: var(--planeacion-800);
+  border-color: var(--planeacion-200);
+}
+
+.badge.role-calidad {
+  background-color: var(--calidad-50);
+  color: var(--calidad-800);
+  border-color: var(--calidad-200);
+}
+
+/* Mejoras visuales para la estructura por áreas */
+.sidebar-with-areas .sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebar-with-areas .nav-item {
+  transition: all 0.2s ease;
+}
+
+.sidebar-with-areas .nav-item:hover {
+  transform: translateX(2px);
+}
+
+/* Indicadores de permiso en tiempo real */
+.permission-indicator {
+  font-size: 0.6rem;
+  padding: 0.125rem 0.25rem;
+  border-radius: 6px;
+  margin-left: auto;
+}
+
+.permission-indicator.read {
+  background-color: var(--primary-100);
+  color: var(--primary-700);
+}
+
+.permission-indicator.write {
+  background-color: var(--planeacion-100);
+  color: var(--planeacion-700);
+}
+
+.permission-indicator.delete {
+  background-color: var(--error-100);
+  color: var(--error-700);
+}
+
+/* Estilos para tooltips de área */
+.area-tooltip {
+  position: absolute;
+  background-color: var(--black);
+  color: var(--white);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.area-tooltip.show {
+  opacity: 1;
+}
+
+/* Estilos adicionales para la sidebar con efectos de despliegue */
+
+/* Animaciones suaves para los iconos de chevron */
+.area-chevron {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.area-chevron.expanded {
+  transform: rotate(90deg);
+}
+
+/* Animaciones para los contenedores de módulos */
+.modules-container {
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modules-container.collapsed {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.modules-container.expanded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Animación de aparición para los módulos individuales */
+.nav-item.module {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item.module.appear {
+  animation: moduleAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes moduleAppear {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Hover effects para los headers de área */
+.area-header {
+  transition: all 0.2s ease;
+  border-radius: var(--border-radius);
+}
+
+.area-header:hover {
+  background-color: var(--gray-50);
+  transform: translateX(2px);
+}
+
+/* Efectos de pulso para el área activa */
+.area-header.active {
+  background-color: var(--primary-50);
+  border-left: 3px solid var(--primary-600);
+  padding-left: calc(0.5rem - 3px);
+}
+
+/* Animación de apertura suave */
+.sidebar-section {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Estados específicos por área */
+.area-ti .area-header:hover {
+  background-color: var(--primary-50);
+  color: var(--primary-800);
+}
+
+.area-planeacion .area-header:hover {
+  background-color: var(--success-50);
+  color: var(--success-800);
+}
+
+.area-calidad .area-header:hover {
+  background-color: var(--warning-50);
+  color: var(--warning-800);
+}
+
+/* Animación de escalado suave para los iconos */
+.nav-item svg {
+  transition: transform 0.2s ease;
+}
+
+.nav-item:hover svg {
+  transform: scale(1.1);
+}
+
+.nav-item.active svg {
+  transform: scale(1.05);
+}
+
+/* Efecto de deslizamiento para los módulos */
+.module-slide-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.module-slide-enter.module-slide-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.module-slide-exit {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.module-slide-exit.module-slide-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Indicador de carga para el cambio de sección */
+.nav-item.loading::after {
+  content: '';
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--gray-300);
+  border-top: 2px solid var(--primary-600);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Efecto de rebote suave para la selección */
+.nav-item.selected {
+  animation: bounceSelect 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounceSelect {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Animación de aparición para toda la sidebar */
+.sidebar {
+  animation: slideInLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Efecto de ondulación al hacer click */
+.nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.nav-item:active::before {
+  width: 200px;
+  height: 200px;
+}
+
+/* Responsive: En móvil, las animaciones son más rápidas */
+@media (max-width: 768px) {
+  .modules-container,
+  .nav-item.module,
+  .area-header {
+    transition-duration: 0.2s;
+  }
+  
+  .sidebar {
+    animation-duration: 0.3s;
+  }
+  
+  @keyframes moduleAppear {
+    from {
+      opacity: 0;
+      transform: translateX(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+/* Tema oscuro: ajustes para las animaciones */
+.theme-dark .area-header:hover {
+  background-color: var(--gray-800);
+}
+
+.theme-dark .nav-item::before {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Accesibilidad: Reducir animaciones si el usuario lo prefiere */
+@media (prefers-reduced-motion: reduce) {
+  .modules-container,
+  .nav-item.module,
+  .area-header,
+  .nav-item svg,
+  .area-chevron {
+    transition: none;
+  }
+  
+  .sidebar {
+    animation: none;
+  }
+  
+  .nav-item.selected {
+    animation: none;
+  }
+}
