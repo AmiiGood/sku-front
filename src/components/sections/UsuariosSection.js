@@ -77,20 +77,35 @@ const UsuariosSection = () => {
 
   const handleSubmit = async () => {
     try {
-      let dataToSend = { ...formData };
+      // Crear una copia del formData con los valores correctos
+      let dataToSend = {
+        nombre: formData.nombre,
+        correo: formData.correo,
+        rol_id: parseInt(formData.rol_id),
+        printer_ip: formData.printer_ip || "",
+        printer_port: parseInt(formData.printer_port) || 9100,
+        printer_enabled: Boolean(formData.printer_enabled), // Asegurar que sea booleano
+      };
 
       if (editingUsuario) {
         if (!hasPermission("usuarios", "update")) {
           toast.error("No tienes permisos para actualizar usuarios", 3000);
           return;
         }
-        delete dataToSend.contrasena;
+        // No incluir contraseña en actualizaciones a menos que se haya cambiado
+        if (formData.contrasena && formData.contrasena.trim() !== "") {
+          dataToSend.contrasena = formData.contrasena;
+        }
       } else {
         if (!hasPermission("usuarios", "create")) {
           toast.error("No tienes permisos para crear usuarios", 3000);
           return;
         }
+        // Incluir contraseña solo en creación
+        dataToSend.contrasena = formData.contrasena;
       }
+
+      console.log("Datos a enviar:", dataToSend); // Para debug
 
       if (editingUsuario) {
         await request(`/api/usuarios/${editingUsuario.id}`, {
@@ -137,15 +152,18 @@ const UsuariosSection = () => {
 
     setEditingUsuario(usuario);
     setViewingUsuario(null);
+    
+    // IMPORTANTE: Asegurar que todos los valores se conviertan correctamente
     setFormData({
-      nombre: usuario.nombre,
-      correo: usuario.correo,
-      contrasena: "",
-      rol_id: usuario.rol_id,
+      nombre: usuario.nombre || "",
+      correo: usuario.correo || "",
+      contrasena: "", // Siempre vacío para edición
+      rol_id: usuario.rol_id || (roles.length > 0 ? roles[0].id : ""),
       printer_ip: usuario.printer_ip || "",
       printer_port: usuario.printer_port || 9100,
-      printer_enabled: usuario.printer_enabled ?? true,
+      printer_enabled: Boolean(usuario.printer_enabled), // Convertir a booleano explícitamente
     });
+    
     setShowModal(true);
   };
 
@@ -153,13 +171,13 @@ const UsuariosSection = () => {
     setViewingUsuario(usuario);
     setEditingUsuario(null);
     setFormData({
-      nombre: usuario.nombre,
-      correo: usuario.correo,
+      nombre: usuario.nombre || "",
+      correo: usuario.correo || "",
       contrasena: "",
-      rol_id: usuario.rol_id,
+      rol_id: usuario.rol_id || "",
       printer_ip: usuario.printer_ip || "",
       printer_port: usuario.printer_port || 9100,
-      printer_enabled: usuario.printer_enabled ?? true,
+      printer_enabled: Boolean(usuario.printer_enabled),
     });
     setShowModal(true);
   };
@@ -234,6 +252,16 @@ const UsuariosSection = () => {
         {usuario.printer_ip}:{usuario.printer_port || 9100}
       </span>
     );
+  };
+
+  // Handler específico para el checkbox
+  const handlePrinterEnabledChange = (e) => {
+    const isChecked = e.target.checked;
+    console.log("Checkbox changed to:", isChecked); // Para debug
+    setFormData(prev => ({
+      ...prev,
+      printer_enabled: isChecked
+    }));
   };
 
   return (
@@ -416,6 +444,21 @@ const UsuariosSection = () => {
             </div>
           )}
 
+          {editingUsuario && (
+            <div className="form-group">
+              <label className="form-label">Nueva Contraseña (opcional)</label>
+              <input
+                type="password"
+                className="form-input"
+                value={formData.contrasena}
+                onChange={(e) =>
+                  setFormData({ ...formData, contrasena: e.target.value })
+                }
+                placeholder="Dejar vacío para mantener la actual"
+              />
+            </div>
+          )}
+
           <div className="form-group">
             <label className="form-label">Rol</label>
             <select
@@ -494,18 +537,28 @@ const UsuariosSection = () => {
                 <input
                   type="checkbox"
                   checked={formData.printer_enabled}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      printer_enabled: e.target.checked,
-                    })
-                  }
+                  onChange={handlePrinterEnabledChange}
                   disabled={isReadOnly}
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    accentColor: "var(--primary-600)",
+                  }}
                 />
                 <span className="form-label" style={{ margin: 0 }}>
                   Impresora habilitada
                 </span>
               </label>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--gray-600)",
+                  marginTop: "0.25rem",
+                  marginLeft: "1.5rem",
+                }}
+              >
+                Estado actual: {formData.printer_enabled ? "Habilitada" : "Deshabilitada"}
+              </p>
             </div>
 
             {/* Botón de prueba */}

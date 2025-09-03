@@ -363,7 +363,7 @@ const DefectivosSection = () => {
   return (
     <div>
       <div className="header">
-        <h1>Control de Defectivos</h1>
+        <h1>Defectivos</h1>
         <div className="header-actions">
           <button
             className="btn btn-secondary"
