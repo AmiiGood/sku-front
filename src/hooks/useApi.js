@@ -1,4 +1,4 @@
-import { useAuth } from '../contexts/AuthContext';
+﻿import { useAuth } from '../contexts/AuthContext';
 
 export const useApi = () => {
     const { token } = useAuth();
@@ -12,8 +12,10 @@ export const useApi = () => {
             ...options.headers,
         };
 
+	const fullUrl = `http://172.16.101.107:3000${url}`;
+
         // Ahora solo usa la ruta relativa
-        const response = await fetch(url, {
+        const response = await fetch(fullUrl, {
             ...options,
             headers,
         });
