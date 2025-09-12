@@ -26,6 +26,7 @@ const ArticulosSection = () => {
   const [articuloToPrint, setArticuloToPrint] = useState(null);
   const [editingArticulo, setEditingArticulo] = useState(null);
   const [viewingArticulo, setViewingArticulo] = useState(null);
+  const [modalMode, setModalMode] = useState("create"); // "create", "edit", "view"
   const [formData, setFormData] = useState({
     SKU: "",
     Descripcion: "",
@@ -93,20 +94,7 @@ const ArticulosSection = () => {
         toast.success("Artículo creado exitosamente", 3000);
       }
 
-      setShowModal(false);
-      setEditingArticulo(null);
-      setFormData({
-        SKU: "",
-        Descripcion: "",
-        UnitCode: "",
-        GroupCode: "",
-        FamilyCode: "",
-        KindCode: "",
-        ColorCode: "",
-        Size: "",
-        UPCCode: "",
-        QuantityPerLU: "0",
-      });
+      closeModal();
       loadArticulos(currentPage, search);
     } catch (error) {
       console.error("Error saving articulo:", error);
@@ -117,6 +105,25 @@ const ArticulosSection = () => {
     }
   };
 
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingArticulo(null);
+    setViewingArticulo(null);
+    setModalMode("create");
+    setFormData({
+      SKU: "",
+      Descripcion: "",
+      UnitCode: "",
+      GroupCode: "",
+      FamilyCode: "",
+      KindCode: "",
+      ColorCode: "",
+      Size: "",
+      UPCCode: "",
+      QuantityPerLU: "0",
+    });
+  };
+
   const handleEdit = (articulo) => {
     if (!hasPermission("articulos", "update")) {
       toast.error("No tienes permisos para editar artículos", 3000);
@@ -124,6 +131,8 @@ const ArticulosSection = () => {
     }
 
     setEditingArticulo(articulo);
+    setViewingArticulo(null); // Limpiar el estado de viewing
+    setModalMode("edit");
     setFormData({
       SKU: articulo.SKU,
       Descripcion: articulo.Descripcion,
@@ -141,6 +150,8 @@ const ArticulosSection = () => {
 
   const handleView = (articulo) => {
     setViewingArticulo(articulo);
+    setEditingArticulo(null); // Limpiar el estado de editing
+    setModalMode("view");
     setFormData({
       SKU: articulo.SKU,
       Descripcion: articulo.Descripcion,
@@ -217,15 +228,21 @@ const ArticulosSection = () => {
     }
   };
 
-  // Determinar el título del modal
+  // Determinar el título del modal basado en modalMode
   const getModalTitle = () => {
-    if (viewingArticulo) return "Ver Artículo";
-    if (editingArticulo) return "Editar Artículo";
-    return "Nuevo Artículo";
+    switch (modalMode) {
+      case "view":
+        return "Ver Artículo";
+      case "edit":
+        return "Editar Artículo";
+      case "create":
+      default:
+        return "Nuevo Artículo";
+    }
   };
 
-  // Determinar si los campos deben ser readonly
-  const isReadOnly = viewingArticulo !== null;
+  // Determinar si los campos deben ser readonly basado en modalMode
+  const isReadOnly = modalMode === "view";
 
   return (
     <div>
@@ -236,6 +253,9 @@ const ArticulosSection = () => {
             <button
               className="btn btn-primary"
               onClick={() => {
+                setModalMode("create");
+                setEditingArticulo(null);
+                setViewingArticulo(null);
                 setFormData({
                   SKU: "",
                   Descripcion: "",
@@ -248,8 +268,6 @@ const ArticulosSection = () => {
                   UPCCode: "",
                   QuantityPerLU: "0",
                 });
-                setEditingArticulo(null);
-                setViewingArticulo(null);
                 setShowModal(true);
               }}
             >
@@ -385,23 +403,7 @@ const ArticulosSection = () => {
 
       <Modal
         isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setEditingArticulo(null);
-          setViewingArticulo(null);
-          setFormData({
-            SKU: "",
-            Descripcion: "",
-            UnitCode: "",
-            GroupCode: "",
-            FamilyCode: "",
-            KindCode: "",
-            ColorCode: "",
-            Size: "",
-            UPCCode: "",
-            QuantityPerLU: "0",
-          });
-        }}
+        onClose={closeModal}
         title={getModalTitle()}
       >
         <div>
@@ -551,13 +553,13 @@ const ArticulosSection = () => {
           <div className="modal-footer">
             <button
               className="btn btn-secondary"
-              onClick={() => setShowModal(false)}
+              onClick={closeModal}
             >
               {isReadOnly ? "Cerrar" : "Cancelar"}
             </button>
             {!isReadOnly && (
               <button className="btn btn-primary" onClick={handleSubmit}>
-                {editingArticulo ? "Actualizar" : "Crear"}
+                {modalMode === "edit" ? "Actualizar" : "Crear"}
               </button>
             )}
           </div>
